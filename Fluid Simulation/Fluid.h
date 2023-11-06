@@ -12,7 +12,7 @@ class Fluid {
 private:
 	enum class ColorSpace { GRAYSCALE, HSV };
 
-	const unsigned int size;
+	const int size;
 
 	float dt = 0;
 	float diff;
@@ -40,10 +40,10 @@ private:
 	void Advect(int b, std::vector<float>& d, std::vector<float>& d0, std::vector<float>& vx, std::vector<float>& vy, float dt);
 
 public:
-	Fluid(const unsigned int& grid_size, const float& diffusion, const float& viscocity);
+	Fluid(const int& grid_size, const float& diffusion, const float& viscocity);
 
-	void AddDensity(float x, float y, float amount);
-	void AddVelocity(float x, float y, glm::vec2 amount);
+	void AddDensity(int x, int y, float amount);
+	void AddVelocity(int x, int y, glm::vec2 amount);
 
 	void Update(const float& dt);
 	void Draw(void* ptr);
@@ -52,12 +52,11 @@ public:
 	void SetGrayscaleSpace();
 	void SetHSVSpace();
 	void PrintDensity();
-	void FadeDensity(int size);
 
 	std::vector<glm::vec4> densityPixel;
 };
 
-Fluid::Fluid(const unsigned int& grid_size, const float& diffusion, const float& viscocity)
+Fluid::Fluid(const int& grid_size, const float& diffusion, const float& viscocity)
 	: size(grid_size), diff(diffusion), visc(viscocity), renderColorSpace(ColorSpace::GRAYSCALE) {
 
 	pVx = std::vector<float>(size * size);
@@ -79,12 +78,12 @@ int Fluid::IndexAt(int x, int y) {
 	return (y * size) + x;
 }
 
-void Fluid::AddDensity(float x, float y, float amount) {
+void Fluid::AddDensity(int x, int y, float amount) {
 	int index = IndexAt(x, y);
 	density[index] += amount;
 }
 
-void Fluid::AddVelocity(float x, float y, glm::vec2 amount) {
+void Fluid::AddVelocity(int x, int y, glm::vec2 amount) {
 	int index = IndexAt(x, y);
 	Vx[index] += amount.x;
 	Vy[index] += amount.y;
@@ -161,7 +160,7 @@ void Fluid::SetBnd(int b, std::vector<float>& x) {
 }
 
 void Fluid::LinSolve(int b, std::vector<float>& x, std::vector<float>& x0, float a, float c, int iter) {
-	float cRecip = 1.0 / c;
+	float cRecip = 1.0f / c;
 	for (int k = 0; k < iter; k++) {
 		for (int j = 1; j < size - 1; j++) {
 			for (int i = 1; i < size - 1; i++) {
@@ -214,13 +213,13 @@ void Fluid::ClearDivergence(std::vector<float>& vx, std::vector<float>& vy, std:
 void Fluid::Advect(int b, std::vector<float>& d, std::vector<float>& d0, std::vector<float>& vx, std::vector<float>& vy, float dt) {
 	float i0, i1, j0, j1;
 
-	float dtx = dt * (size - 2);
-	float dty = dt * (size - 2);
+	float dtx = dt * (static_cast<float>(size) - 2.0f);
+	float dty = dt * (static_cast<float>(size) - 2.0f);
 
 	float s0, s1, t0, t1;
 	float tmp1, tmp2, x, y;
 
-	float Nfloat = size;
+	float Nfloat = static_cast<float>(size);
 	float ifloat, jfloat;
 
 	int i, j;
@@ -246,10 +245,10 @@ void Fluid::Advect(int b, std::vector<float>& d, std::vector<float>& d0, std::ve
 			t1 = y - j0;
 			t0 = 1.0f - t1;
 
-			int i0i = i0;
-			int i1i = i1;
-			int j0i = j0;
-			int j1i = j1;
+			int i0i = static_cast<int>(i0);
+			int i1i = static_cast<int>(i1);
+			int j0i = static_cast<int>(j0);
+			int j1i = static_cast<int>(j1);
 
 			d[IndexAt(i, j)] =
 				s0 * (t0 * d0[IndexAt(i0i, j0i)] + t1 * d0[IndexAt(i0i, j1i)]) +

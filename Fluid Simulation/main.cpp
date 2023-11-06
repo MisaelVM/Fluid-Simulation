@@ -10,14 +10,9 @@
 
 Fluid* fluid;
 
-//const unsigned int SCR_WIDTH = 800;
-//const unsigned int SCR_HEIGHT = 800;
-//const unsigned int grid_size = 80;
-
 const unsigned int SCR_WIDTH = 1080;
 const unsigned int SCR_HEIGHT = 1080;
 const unsigned int grid_size = 216;
-//const unsigned int grid_size = 512;
 
 void* SSBOptrData;
 
@@ -33,7 +28,6 @@ unsigned int compile_shader(unsigned int type, const std::string& shader_path);
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_position_callback(GLFWwindow* window, double xpos, double ypos);
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void process_input(GLFWwindow* window);
 
@@ -43,11 +37,12 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 #ifdef __APPLE__
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "GLFW Window", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Fluid Simulation", nullptr, nullptr);
 	if (!window) {
 		std::cout << "Failed to create GLFW window!\n";
 		glfwTerminate();
@@ -56,7 +51,6 @@ int main()
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetCursorPosCallback(window, mouse_position_callback);
-	glfwSetMouseButtonCallback(window, mouse_button_callback);
 	glfwSetKeyCallback(window, key_callback);
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -177,26 +171,22 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 
 void mouse_position_callback(GLFWwindow* window, double xpos, double ypos) {
 	if (firstMouse) {
-		lastX = xpos;
-		lastY = ypos;
+		lastX = static_cast<float>(xpos);
+		lastY = static_cast<float>(ypos);
 		firstMouse = false;
 	}
 
-	float offsetX = xpos - lastX;
-	float offsetY = lastY - ypos;
-	lastX = xpos;
-	lastY = ypos;
+	float offsetX = static_cast<float>(xpos) - lastX;
+	float offsetY = lastY - static_cast<float>(ypos);
+	lastX = static_cast<float>(xpos);
+	lastY = static_cast<float>(ypos);
 
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-		glm::vec2 tile = glm::vec2(SCR_WIDTH / grid_size, SCR_HEIGHT / grid_size);
-		glm::vec2 tileCoord = glm::vec2(int(xpos / tile.x), int(ypos / tile.y));
+		glm::ivec2 tile = glm::ivec2(SCR_WIDTH / grid_size, SCR_HEIGHT / grid_size);
+		glm::ivec2 tileCoord = glm::ivec2(int(xpos / tile.x), int(ypos / tile.y));
 		fluid->AddDensity(tileCoord.x, grid_size - tileCoord.y, 1000 * 3);
 		fluid->AddVelocity(tileCoord.x, grid_size - tileCoord.y, glm::vec2(offsetX, offsetY) * 100.f);
 	}
-}
-
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
-
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
